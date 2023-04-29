@@ -1,3 +1,5 @@
 PRG/*/test_files
 
 *.zip
+
+PRG/*/generate_solutions.sh
