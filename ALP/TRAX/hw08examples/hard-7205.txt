@@ -1,0 +1,7 @@
+dlld lldd ddll lldd dlld ldld lldd
+none lddl dldl ddll lddl ddll ldld
+ldld lldd none lldd dldl dlld lddl
+ddll ldld none lddl dlld lddl dldl
+lldd ddll ldld lldd ddll lldd dlld
+lddl dlld none lddl dldl ddll lddl
+none ldld lddl dldl dldl dlld lldd
