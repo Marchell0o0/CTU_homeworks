@@ -105,12 +105,7 @@ int main(int argc, char *argv[])
          printf("%d\n", get_queue_size(queue));
          // size command
       }
-      else if (s[0] == 'c')
-      {
-         printf("%d\n", get_queue_capacity(queue));
-         // capacity command
       }
-   }
    // remove rest of the elements in the queue
    while (get_queue_size(queue))
    {

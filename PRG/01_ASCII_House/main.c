@@ -14,120 +14,123 @@
 #define HOUSE_INSIDE_1 "*"
 #define HOUSE_INSIDE_2 "o"
 
-
-
-int read_input(int* widht, int* height, int* fence_size);
+int read_input(int *widht, int *height, int *fence_size);
 void print_error(int ret);
 
 // print a straight line of symbols
-void straight_line(int length, char symbol[]); 
+void straight_line(int length, char symbol[]);
 
 // print a triangle of walls
-void roof(int width); 
+void roof(int width);
 
 // print a square of walls with empty space inside
 void box(int width, int height);
 
 // print a square of walls with house_inside 1 and 2 inside and a fence to the right
-void box_with_fence(int width, int height, int fence_size); 
-
-
-
+void box_with_fence(int width, int height, int fence_size);
 
 /* The main program */
-
 
 int main(int argc, char *argv[])
 {
   int width = 0;
-  int height = 0; 
+  int height = 0;
   int fence_size = 0;
 
   int return_code = read_input(&width, &height, &fence_size);
 
   if (return_code != EXIT_SUCCESS)
     print_error(return_code);
-  else{
-    roof(width); 
-    if (fence_size == 0) 
+  else
+  {
+    roof(width);
+    if (fence_size == 0)
       box(width, height);
     else
       box_with_fence(width, height, fence_size);
-    }
+  }
   return return_code;
 }
 
-void straight_line(int length, char symbol[]){
-  for (int i = 0; i < length; ++i){
+void straight_line(int length, char symbol[])
+{
+  for (int i = 0; i < length; ++i)
+  {
     printf("%s", symbol);
   }
 }
 
-void roof(int width){
-  for (int i = 0; i< width/2; ++i){
-    straight_line(width/2-i, EMPTY_SPACE);
+void roof(int width)
+{
+  for (int i = 0; i < width / 2; ++i)
+  {
+    straight_line(width / 2 - i, EMPTY_SPACE);
     if (i != 0)
       printf(WALL);
-    straight_line((i*2)-1, EMPTY_SPACE);
-    printf(WALL"\n");
+    straight_line((i * 2) - 1, EMPTY_SPACE);
+    printf(WALL "\n");
   }
 }
 
-void box(int width, int height){
-  for (int i = 0; i < height; ++i){
+void box(int width, int height)
+{
+  for (int i = 0; i < height; ++i)
+  {
     printf(WALL);
 
     if (i == 0 || i == height - 1)
-      straight_line(width-2, WALL);
+      straight_line(width - 2, WALL);
 
     else
-      straight_line(width-2, EMPTY_SPACE);
+      straight_line(width - 2, EMPTY_SPACE);
 
-    printf(WALL"\n");
+    printf(WALL "\n");
   }
 }
 
-void box_with_fence(int width, int height, int fence_size){
-  for (int i = 0; i < height; ++i){
+void box_with_fence(int width, int height, int fence_size)
+{
+  for (int i = 0; i < height; ++i)
+  {
 
-      if (i == 0 || i == height - 1)
-        straight_line(width, WALL);
+    if (i == 0 || i == height - 1)
+      straight_line(width, WALL);
 
-      else {
-        printf(WALL);
-        if (i % 2 == 1)
-        {
-          straight_line((width/2)-1, HOUSE_INSIDE_2 HOUSE_INSIDE_1);
-          printf(HOUSE_INSIDE_2);
-        }
-        else{
-          straight_line((width/2)-1, HOUSE_INSIDE_1 HOUSE_INSIDE_2);
-          printf(HOUSE_INSIDE_1);
-        }
-        printf(WALL);
-      }
-
-
-      if (i == (height - fence_size) || i == height - 1)
+    else
+    {
+      printf(WALL);
+      if (i % 2 == 1)
       {
-        if (fence_size % 2 == 1)
-          printf(FENCE_PART);
-        straight_line(fence_size/2, FENCE_BORDER FENCE_PART);
+        straight_line((width / 2) - 1, HOUSE_INSIDE_2 HOUSE_INSIDE_1);
+        printf(HOUSE_INSIDE_2);
       }
-
-      else if (i > (height - fence_size))
+      else
       {
-        if (fence_size % 2 == 1)
-          printf(FENCE_PART);
-        straight_line(fence_size/2, EMPTY_SPACE FENCE_PART);
+        straight_line((width / 2) - 1, HOUSE_INSIDE_1 HOUSE_INSIDE_2);
+        printf(HOUSE_INSIDE_1);
       }
-      printf("\n");
+      printf(WALL);
+    }
+
+    if (i == (height - fence_size) || i == height - 1)
+    {
+      if (fence_size % 2 == 1)
+        printf(FENCE_PART);
+      straight_line(fence_size / 2, FENCE_BORDER FENCE_PART);
+    }
+
+    else if (i > (height - fence_size))
+    {
+      if (fence_size % 2 == 1)
+        printf(FENCE_PART);
+      straight_line(fence_size / 2, EMPTY_SPACE FENCE_PART);
+    }
+    printf("\n");
   }
 }
 
-
-
-int read_input(int* width, int* height, int* fence_size){
+int read_input(int *width, int *height, int *fence_size)
+{
   int correct_inputs = scanf("%d %d", width, height);
 
   // check errors for input
@@ -150,7 +153,8 @@ int read_input(int* width, int* height, int* fence_size){
   return EXIT_SUCCESS;
 }
 
-void print_error (int return_code){
+void print_error(int return_code)
+{
   switch (return_code)
   {
   case ERROR_INPUT:
