@@ -19,6 +19,7 @@ void print_error(int error_code);
 // Decoding
 char rotate(char original, int offset);
 void shift(char *string, int offset);
+int compare(char *string1, char *string2);
 char *decode(char *coded, char *rumor);
 
 /* The main program */
@@ -104,6 +105,16 @@ void shift(char *string, int offset)
 
     for (int i = 0; i < strlen(string); i++)
         string[i] = rotate(string[i], offset);
+}
+
+// Compare two strings and return the number of matching characters
+int compare(char *string1, char *string2)
+{
+    int same = 0;
+    for (int i = 0; i < strlen(string1); i++)
+        if (string1[i] == string2[i])
+            same++;
+    return same;
 }
 
 int read_input(char *coded, char *rumor)
