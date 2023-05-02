@@ -5,3 +5,8 @@ PRG/**/testing_files/
 PRG/*/generate_solutions.sh
 
 PRG/**/lectures/
+
+KUI/**/kuimaze/
+KUI/**/maps/
+KUI/**/maps_difficult/
+KUI/**/__pycache__/
