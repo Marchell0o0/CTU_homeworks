@@ -20,7 +20,7 @@ Input:
 7 7 3
 
 Output:
-
+```
    X
   X X
  X   X
@@ -31,11 +31,14 @@ Xo*o*oX
 X*o*o*X|-|
 Xo*o*oX| |
 XXXXXXX|-|
+```
 
 Input:
 9 4
 
 Output:
+```
+
     X
    X X
   X   X
@@ -44,6 +47,7 @@ XXXXXXXXX
 X       X
 X       X
 XXXXXXXXX
+```
 
 
 ## Testing
