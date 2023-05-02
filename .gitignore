@@ -1,10 +1,8 @@
-PRG/**/testing_files/
-
 *.zip
 
-PRG/*/generate_solutions.sh
-
 PRG/**/lectures/
+PRG/**/testing_files/
+PRG/*/generate_solutions.sh
 
 KUI/**/kuimaze/
 KUI/**/maps/
