@@ -38,7 +38,6 @@ Input:
 
 Output:
 ```
-
     X
    X X
   X   X
