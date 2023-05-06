@@ -1,4 +1,4 @@
-#Testing 
+# Testing 
 
 To play a game against a bot, launch reverse_creator.py with this command from the Reversi folder:
 
