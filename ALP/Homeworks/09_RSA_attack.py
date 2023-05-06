@@ -39,41 +39,29 @@ def findfi(p, q):
 def ExtEuclid(a, b):
     Aa, Ba = 1, 0  # a = 1 * a + 0 * b
     Ab, Bb = 0, 1  # b = 0 * a + 1 * b
-    # Prohodíme, je-li třeba
     if b > a:
         a, b = b, a
         Aa, Ab = Ab, Aa
         Ba, Bb = Bb, Ba
-    # Zde je vždy a >= b
     while b > 0:
-        # Odečteme od proměnné a proměnnou b
-        # tolikrát, kolikrát se tam vejde.
-        # ("//" značí celočíselné dělení)
         Aa = Aa - (a // b) * Ab
         Ba = Ba - (a // b) * Bb
-        # nsd(a % b, b) = nsd(a, b).
         a = a % b
         # Prohodíme
         a, b = b, a
         Aa, Ab = Ab, Aa
         Ba, Bb = Bb, Ba
-    # nsd(0, a) = a.
-    # Vrátíme také Bézoutovy koeficienty.
     return a, Aa, Ba
 
 
 def Euclid(a, b):
-    # Prohodíme, je-li třeba
     if b > a:
         a, b = b, a
 
-    # Zde je vždy a >= b
     while b > 0:
-        # nsd(a % b, b) = nsd(a, b).
         a = a % b
         a, b = b, a
 
-    # nsd(0, a) = a.
     return a
 
 
@@ -98,32 +86,18 @@ def decode(x):
     return "".join(res)
 
 
-# start = time()
-
 p, q = findPQ(n, int(n**0.5) * 10)
 fi = findfi(p, q)
 possible_d = []
 
-# end = time()
-# print("poisk p q fi", end - start)
-
-
-# start = time()
 
 for e in range(2**18, 2**20):
     if finde(e, fi):
         possible_d.append(findd(e, fi))
 
-# end = time()
-# print("poisk e d", end - start)
-
-
 matches = {"Tento", "predmet", "proste", "nejlepsi", "genialni"}
 temp = str()
 
-# print("zapuskajem deshifrovku...")
-
-# start = time()
 
 for d in possible_d:
     decrypted_ascii = [pow(x, d, n) for x in inp]
@@ -134,7 +108,3 @@ for d in possible_d:
             temp.replace("\0x0", "")
         print(temp)
         break
-
-
-# end = time()
-# print("finish", end - start)
