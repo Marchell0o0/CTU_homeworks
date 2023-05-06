@@ -248,10 +248,10 @@ class game_state:
                                 r_s = r_temp + r_shift
                                 c_s = c_temp + c_shift
                                 if (inside(r_s, c_s) and
-                                            board[r_s][c_s] != 'none' and
-                                            board[r_temp][c_temp][main_color] == color[0] and
-                                            board[r_s][c_s][temp_color] == color[0]
-                                        ):
+                                    board[r_s][c_s] != 'none' and
+                                    board[r_temp][c_temp][main_color] == color[0] and
+                                    board[r_s][c_s][temp_color] == color[0]
+                                    ):
                                     if (r_s, c_s) == start and length > 3:
                                         return True
                                     else:
@@ -273,11 +273,11 @@ class game_state:
                             r_s = r_temp + r_shift
                             c_s = c_temp + c_shift
                             if (inside(r_s, c_s) and
-                                        board[r_s][c_s] != 'none' and
-                                        board[r_temp][c_temp][main_color] == color[0] and
-                                        board[r_s][c_s][temp_color] == color[0] and
-                                        (r_s, c_s) not in tried_already
-                                    ):
+                                board[r_s][c_s] != 'none' and
+                                board[r_temp][c_temp][main_color] == color[0] and
+                                board[r_s][c_s][temp_color] == color[0] and
+                                (r_s, c_s) not in tried_already
+                                ):
                                 queue.append((r_s, c_s))
                                 break
 
@@ -294,11 +294,11 @@ class game_state:
                             r_s = r_temp + r_shift
                             c_s = c_temp + c_shift
                             if (inside(r_s, c_s) and
-                                        board[r_s][c_s] != 'none' and
-                                        board[r_temp][c_temp][main_color] == color[0] and
-                                        board[r_s][c_s][temp_color] == color[0] and
-                                        (r_s, c_s) not in tried_already
-                                    ):
+                                board[r_s][c_s] != 'none' and
+                                board[r_temp][c_temp][main_color] == color[0] and
+                                board[r_s][c_s][temp_color] == color[0] and
+                                (r_s, c_s) not in tried_already
+                                ):
                                 queue.append((r_s, c_s))
                                 break
 
@@ -323,10 +323,10 @@ class game_state:
                                 r_s = r_temp + r_shift
                                 c_s = c_temp + c_shift
                                 if (inside(r_s, c_s) and
-                                    board[r_s][c_s] != 'none' and
-                                    board[r_temp][c_temp][main_color] == color[0] and
-                                    board[r_s][c_s][temp_color] == color[0]
-                                    ):
+                                        board[r_s][c_s] != 'none' and
+                                        board[r_temp][c_temp][main_color] == color[0] and
+                                        board[r_s][c_s][temp_color] == color[0]
+                                        ):
                                     if (r_s, c_s) == start and length > 3:
                                         cycles_lines[color] += length
                                     else:
@@ -349,11 +349,11 @@ class game_state:
                             r_s = r_temp + r_shift
                             c_s = c_temp + c_shift
                             if (inside(r_s, c_s) and
-                                board[r_s][c_s] != 'none' and
-                                board[r_temp][c_temp][main_color] == color[0] and
-                                board[r_s][c_s][temp_color] == color[0] and
-                                (r_s, c_s) not in tried_already
-                                ):
+                                    board[r_s][c_s] != 'none' and
+                                    board[r_temp][c_temp][main_color] == color[0] and
+                                    board[r_s][c_s][temp_color] == color[0] and
+                                    (r_s, c_s) not in tried_already
+                                    ):
                                 length += 1
                                 queue.append((r_s, c_s))
                                 break
@@ -372,11 +372,11 @@ class game_state:
                             r_s = r_temp + r_shift
                             c_s = c_temp + c_shift
                             if (inside(r_s, c_s) and
-                                board[r_s][c_s] != 'none' and
-                                board[r_temp][c_temp][main_color] == color[0] and
-                                board[r_s][c_s][temp_color] == color[0] and
-                                (r_s, c_s) not in tried_already
-                                ):
+                                    board[r_s][c_s] != 'none' and
+                                    board[r_temp][c_temp][main_color] == color[0] and
+                                    board[r_s][c_s][temp_color] == color[0] and
+                                    (r_s, c_s) not in tried_already
+                                    ):
                                 queue.append((r_s, c_s))
                                 length += 1
                                 break
@@ -410,29 +410,6 @@ def inside(r, c):
 
 if __name__ == "__main__":
 
-    board = [
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'ldld', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-        ['none', 'none', 'none', 'none', 'none',
-            'none', 'none', 'none', 'none', 'none'],
-    ]
-
     boardRows = 10
     boardCols = boardRows
     board = [["none"]*boardCols for _ in range(boardRows)]
@@ -443,34 +420,23 @@ if __name__ == "__main__":
     p2 = Player(board, "player2", 'd')
 
     d = Drawer.Drawer()
-    sum = 0
-    for _ in range(20):
-        boardRows = 10
-        boardCols = boardRows
-        board = [["none"]*boardCols for _ in range(boardRows)]
-        board[boardRows//2][boardCols//2] = ["lldd", "dlld",
-                                             "ddll", "lddl", "dldl", "ldld"][random.randint(0, 5)]
+    idx = 0
+    while True:
 
-        p1 = Player(board, "player1", 'l')
-        p2 = Player(board, "player2", 'd')
-        idx = 0
+        rmove = p1.move()
 
-        while True:
+        for move in rmove:
+            row, col, tile = move
+            p1.board[row][col] = tile
+            p2.board[row][col] = tile
+        idx += 1
 
-            rmove = p1.move()
+        d.draw(p1.board, f"move-{idx}, made by {p1.myColor}.png")
 
-            for move in rmove:
-                row, col, tile = move
-                p1.board[row][col] = tile
-                p2.board[row][col] = tile
-            idx += 1
+        if len(rmove) == 0:
+            break
+        p1, p2 = p2, p1
 
-            if len(rmove) == 0:
-                sum += idx
-                break
-            p1, p2 = p2, p1
-
-    print(sum/20)
 #    # """
 #     with cProfile.Profile() as pr:
 #         main_2(p1, p2)
