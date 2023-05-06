@@ -1,4 +1,6 @@
 *.zip
+**/__pycache__/
+**/.vscode/
 
 PRG/**/lectures/
 PRG/**/testing_files/
@@ -7,4 +9,8 @@ PRG/*/generate_solutions.sh
 KUI/**/kuimaze/
 KUI/**/maps/
 KUI/**/maps_difficult/
-KUI/**/__pycache__/
+KUI/**/lab/
+
+ALP/Lessons/
+ALP/Tests/
+ALP/**/Evaluation_functions
