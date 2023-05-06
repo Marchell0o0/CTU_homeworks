@@ -10,8 +10,7 @@
 6. Finds the biggest rectangle of negative numbers in a given matrix. 
 7. Finds a way to fill up a given field with given pieces. 
 8. On a board, finds the fastest way for a horse piece to go from start to goal tile.
-9. Code: codes up a string into a set of big numbers.
-9. AttackL: given a coded message and a set of words from which at least one word should be present in the message, tries every e value from 2^18 to 2^20 to find the right decoded version.
+9. Code: codes up a string into a set of big numbers. Attack: given a coded message and a set of words from which at least one word should be present in the message, tries every e value from 2^18 to 2^20 to find the right decoded version.
 
 ## TRAX
 
