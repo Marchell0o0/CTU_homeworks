@@ -10,14 +10,9 @@
 #include "messages.h"
 
 typedef enum {
-   EV_NUCLEO,
-   EV_KEYBOARD,
-   EV_NUM
-} event_source;
-
-typedef enum {
-   EV_COMPUTE, // request compute on nucleo with particular 
-   EV_RESET_CHUNK, //reset the chunk id
+   EV_COMPUTE, 
+   EV_COMPUTE_BURST,
+   // EV_RESET_CHUNK, 
    EV_ABORT,
    EV_GET_VERSION,
    EV_THREAD_EXIT,
@@ -27,19 +22,11 @@ typedef enum {
    EV_COMPUTE_CPU,
    EV_CLEAR_BUFFER,
    EV_REFRESH,
+   EV_PIPE_IN_MESSAGE,
    EV_TYPE_NUM
 } event_type;
 
 typedef struct {
-   int param;
-} event_keyboard;
-
-typedef struct {
-   message *msg;
-} event_serial;
-
-typedef struct {
-   event_source source;
    event_type type;
    union {
       int param;
@@ -53,6 +40,11 @@ void queue_cleanup(void);
 event queue_pop(void);
 
 void queue_push(event ev);
+
+bool is_quit();
+
+void set_quit();
+
 
 #endif
 

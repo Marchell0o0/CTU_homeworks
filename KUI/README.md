@@ -1,4 +1,4 @@
-# Short descritptions of every project
+# Short descritption of every project
 
 1. Simple object-based implementation of the A* algorithm for solving mazes.
 2. Two functions that are used to create Markov Decision Policy for a maze, one is using value iteration, other policy iteration.

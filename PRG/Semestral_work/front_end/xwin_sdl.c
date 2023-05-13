@@ -10,6 +10,8 @@
 
 #include <SDL_image.h>
 
+#include "utils.h"
+
 #include "xwin_sdl.h"
 
 static SDL_Window *win = NULL;
@@ -53,9 +55,9 @@ int xwin_init(int w, int h)
 {
    int r;
    r = SDL_Init(SDL_INIT_VIDEO);
-   assert(win == NULL);
+   my_assert(win == NULL, __func__, __LINE__, __FILE__);
    win = SDL_CreateWindow("PRG Semester Project", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_SHOWN);
-   assert(win != NULL);
+   my_assert(win != NULL, __func__, __LINE__, __FILE__);
    SDL_SetWindowTitle(win, "PRG SEM");
    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(icon_32x32_bits, 32, 32, 24, 32*3, 0xff, 0xff00, 0xff0000, 0x0000);
    SDL_SetWindowIcon(win, surface);
@@ -65,14 +67,14 @@ int xwin_init(int w, int h)
 
 void xwin_close()
 {
-   assert(win != NULL);
+   my_assert(win != NULL, __func__, __LINE__, __FILE__);
    SDL_DestroyWindow(win);
    SDL_Quit();
 }
 
 void xwin_redraw(int w, int h, unsigned char *img)
 {
-   assert(img && win);
+   my_assert((img && win), __func__, __LINE__, __FILE__);
    SDL_Surface *scr = SDL_GetWindowSurface(win);
    for(int y = 0; y < scr->h; ++y) {
       for(int x = 0; x < scr->w; ++x) {

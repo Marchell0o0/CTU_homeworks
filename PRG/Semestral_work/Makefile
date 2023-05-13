@@ -1,8 +1,32 @@
-# CFLAGS+= -Wall -Werror -std=gnu99 -g
-# LDFLAGS=-pthread
+# CC:=ccache $(CC)
+CFLAGS+= -Wall -Werror -std=gnu99 -g -I.
+LDFLAGS=-pthread
 
-# HW=prgsem
-# BINARIES=prgsem-main
+BINARIES= front_end/prgsem back_end/prgsem-comp_module
+
+CFLAGS+=$(shell sdl2-config --cflags)
+LDFLAGS+=$(shell sdl2-config --libs) -lSDL2_image
+
+COMMON_OBJS = $(patsubst %.c,%.o,$(wildcard *.c))
+FRONT_END_OBJS = $(patsubst %.c,%.o,$(wildcard front_end/*.c)) $(COMMON_OBJS)
+BACK_END_OBJS = $(patsubst %.c,%.o,$(wildcard back_end/*.c)) $(COMMON_OBJS)
+
+all: $(BINARIES)
+
+front_end/prgsem: $(FRONT_END_OBJS)
+	$(CC) $(FRONT_END_OBJS) $(LDFLAGS) -o $@
+
+back_end/prgsem-comp_module: $(BACK_END_OBJS)
+	$(CC) $(BACK_END_OBJS) $(LDFLAGS) -o $@
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+clean:
+	rm -f $(BINARIES) *.o front_end/*.o back_end/*.o
+
+
+# BINARIES=prgsem prgsem-comp_module
 
 # CFLAGS+=$(shell sdl2-config --cflags)
 # LDFLAGS+=$(shell sdl2-config --libs) -lSDL2_image
@@ -10,9 +34,28 @@
 
 # all: $(BINARIES)
 
+# COMMON_OBJS= compute_control.o compute.o event_queue.o gui.o keyboard.o main.o messages.o prg_io_nonblock.o utils.o xwin_sdl.o
+
+# prgsem_OBJS = prgsem.o $(COMMON_OBJS)
+# prgsem-comp_module_OBJS = prgsem-comp_module.o $(COMMON_OBJS)
+
+
+# prgsem: $(prgsem_OBJS)
+# 	$(CC) $(prgsem_OBJS) $(LDFLAGS) -o $@
+
+# prgsem-comp_module: $(prgsem-comp_module_OBJS)
+# 	$(CC) $(prgsem-comp_module_OBJS) $(LDFLAGS) -o $@
+
+# %.o: %.c
+# 	$(CC) -c $(CFLAGS) $< -o $@
+
+# clean:
+# 	rm -f $(BINARIES) *.o
+
+
 # OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
 
-# prgsem-main: $(OBJS)
+# prgsem: $(OBJS)
 # 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 # $(OBJS): %.o: %.c
@@ -21,36 +64,3 @@
 # clean:
 # 	rm -f $(BINARIES) $(OBJS)
 
-
-CFLAGS+= -Wall -Werror -std=gnu99 -g
-LDFLAGS=-pthread
-
-# Set the names of the binary files to be generated
-BINARIES=prgsem-main prgsem-comp_module
-
-# Include flags for SDL2
-CFLAGS+=$(shell sdl2-config --cflags)
-LDFLAGS+=$(shell sdl2-config --libs) -lSDL2_image
-
-# Default target: build all binaries
-all: $(BINARIES)
-
-# Rule for building prgsem-main: list its object file dependencies
-prgsem-main: prgsem-main.o threads.o prg_io_nonblock.o xwin_sdl.o
-	# Link the object files using the linker flags, and output the binary named prgsem-main
-	$(CC) $^ $(LDFLAGS) -o $@
-
-# Rule for building prgsem-comp_module: list its object file dependencies
-prgsem-comp_module: prgsem-comp_module.o threads.o prg_io_nonblock.o
-	# Link the object files using the linker flags, and output the binary named prgsem-comp_module
-	$(CC) $^ $(LDFLAGS) -o $@
-
-# General rule for compiling .c files into .o files
-# Compile the .c file using the compiler flags, and output the corresponding .o file
-%.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
-
-# Rule for cleaning up the generated files
-clean:
-	# Remove the binary files and all .o files
-	rm -f $(BINARIES) *.o
