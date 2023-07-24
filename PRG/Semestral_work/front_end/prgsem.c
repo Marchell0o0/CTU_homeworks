@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <SDL.h>
 
 #include "utils.h"
 #include "main.h"
-#include "keyboard.h"
+#include "gui_win_thread.h"
+#include "terminal_redirect_thread.h"
 #include "prg_io_nonblock.h"
 #include "event_queue.h"
 #include "messages.h"
@@ -21,7 +23,6 @@ void* pipe_front_thread(void*);
 int main(int argc, char* argv[]){
     int ret = EXIT_SUCCESS;
 
-
     const char *fname_pipe_in = argc > 1 ? argv[1] : "/tmp/computational_module.out";
     const char *fname_pipe_out = argc > 2 ? argv[2] : "/tmp/computational_module.in";
     
@@ -31,19 +32,17 @@ int main(int argc, char* argv[]){
     
     my_assert(pipe_in != -1 && pipe_out != -1, __func__, __LINE__, __FILE__);
 
-    enum { KEYBOARD_THRD, PIPE_FRONT_THRD, MAIN_THRD, NUM_THREADS };
+    enum { GUI_WIN_THRD, PIPE_FRONT_THRD, MAIN_THRD, TERMINAL_REDIRECT_THRD,NUM_THREADS };
 
-    const char *thrd_names[NUM_THREADS] = { "Keyboard", "Pipe front", "Main"};
+    const char *thrd_names[NUM_THREADS] = { "GUI Window", "Pipe front", "Main", "Terminal Redirect"};
 
-    void* (*thrd_functions[])(void*) = {keyboard_thread, pipe_front_thread, main_thread};
+    void* (*thrd_functions[])(void*) = {gui_win_thread, pipe_front_thread, main_thread, terminal_redirect_thread};
 
     pthread_t threads[NUM_THREADS];
 
     void* thrd_data[NUM_THREADS] = {};
     thrd_data[PIPE_FRONT_THRD] = &pipe_in;
     thrd_data[MAIN_THRD] = &pipe_out;
-
-
 
     for (int i = 0; i < NUM_THREADS; ++i){
         int r = pthread_create(&threads[i], NULL, thrd_functions[i], thrd_data[i]);
@@ -55,6 +54,8 @@ int main(int argc, char* argv[]){
         int r = pthread_join(threads[i], (void*)&ex);
         fprintf(stderr, "DEBUG: Joining the thread %s has been %s\r\n", thrd_names[i], (r == 0 ? "OK" : "FAIL"));
     }
+
+   
 
     io_close(pipe_in);
     io_close(pipe_out);
@@ -84,7 +85,7 @@ void* pipe_front_thread(void* d)
                 if (get_message_size(c, &len)){
                     msg_buf[i++] = c;
                 } else {
-                    fprintf(stderr, "ERROR: unknown message type\n"); 
+                    fprintf(stderr, "ERROR: Unknown message type %d\n", c); 
                 }
             } else { // read remaining bytes of the message
                 msg_buf[i++] = c;
@@ -103,8 +104,7 @@ void* pipe_front_thread(void* d)
             }
         } 
         else if (r == 0) { } //timeout 
-
-        else { // error
+        else {
             fprintf(stderr, "ERROR: reading from pipe\n");
             set_quit();
             event ev = { .type = EV_QUIT};

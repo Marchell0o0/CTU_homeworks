@@ -3,13 +3,14 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include "main.h"
-
 #include "utils.h"
 #include "event_queue.h"
 #include "messages.h"
 #include "compute_control.h"
 #include "gui.h"
+
+
+#include "main.h"
 
 static void process_pipe_message(event * const ev);
 
@@ -23,9 +24,7 @@ void* main_thread(void* d)
     int msg_len;
     bool quit = false;
 
-   
     computation_init();
-    gui_init();
     do {
         event ev = queue_pop();
         msg.type = MSG_NBR;
@@ -42,21 +41,32 @@ void* main_thread(void* d)
                 set_compute(&msg);
                 break;
             case EV_COMPUTE:
-                compute(&msg);
+                compute_module(&msg);
                 break;
-            case EV_COMPUTE_BURST:
-                compute_burst(&msg);
+            case EV_COMPUTE_CPU:
+                draw_animation(&msg);
                 break;
             case EV_ABORT:
-                msg.type = MSG_ABORT;
-                abort_comp();
+                if (is_computing_module()) {
+                    msg.type = MSG_ABORT;
+                }
+                break;
+            case EV_SAVE_IMAGE:
+                gui_save_image();
+                break;
+            case EV_RESET:
+                reset_computation();
+                break;
+            case EV_RESET_IMAGE:
+                clean_image();
+                gui_refresh();
                 break;
             case EV_PIPE_IN_MESSAGE:
                 process_pipe_message(&ev);
                 break;
             default:
                 break;
-        } // switch end
+        } 
 
         if (msg.type != MSG_NBR){
             // int ret = 
@@ -65,7 +75,6 @@ void* main_thread(void* d)
         }
         quit = is_quit();
     } while (!quit);
-    gui_cleanup();
     computation_cleanup();
 
     return NULL;
@@ -89,16 +98,17 @@ void process_pipe_message(event * const ev)
         case MSG_COMPUTE_DATA:
             update_data(&(msg->data.compute_data));
             break;
-        case MSG_COMPUTE_DATA_BURST:
-            update_data_burst(&(msg->data.compute_data_burst));
-            gui_refresh();
-            break;
         case MSG_DONE:
             gui_refresh();
-            debug("Received done");
-            if (is_done()){
+
+            if (is_saving()) { gui_save_image(); }
+
+            if (is_aborted()){
+                set_not_aborted();
+                info("Received last package");
+            } else if (is_done()){
                 info("Computation is done");
-            } else if (is_computing()){
+            } else if (is_computing_module()){
                 event ev = { .type = EV_COMPUTE};
                 queue_push(ev);
             }
@@ -110,7 +120,7 @@ void process_pipe_message(event * const ev)
         default:
             fprintf(stderr, "WARNING: Unhandled message type %d\n", msg->type);
             break;
-    } // end switch
+    }
     free(ev->data.msg);
     ev->data.msg = NULL;
 }

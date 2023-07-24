@@ -1,7 +1,0 @@
---8399--    --leak-check=full
---8399--    --show-leak-kinds=all
---8399--    --track-origins=yes
---8399--    --verbose
---8399--    --log-file=valgrind-out.txt
---8399-- Contents of /proc/version:
---8399--   Linux version 5.15.90.1-microsoft-standard-WSL2 (oe-user@oe-host) (x86_64-msft-linux-gcc (GCC) 9.3.0, GNU ld (GNU Binutils) 2.34.0.20200220) #1 SMP Fri Jan 27 02:56:13 UTC 2023

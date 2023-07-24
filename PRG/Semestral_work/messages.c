@@ -30,19 +30,13 @@ bool get_message_size(uint8_t msg_type, int *len)
          *len = 2 + 3 * sizeof(uint8_t); // 2 + major, minor, patch
          break;
       case MSG_SET_COMPUTE:
-         *len = 2 + 4 * sizeof(double) + 1; // 2 + 4 * params + n 
+         *len = 2 + 4 * sizeof(double) + 2; // 2 + 4 * params + n 
          break;
       case MSG_COMPUTE:
          *len = 2 + 3 + 2 * sizeof(double) + 2; // 2 + cid (16bit) + 2x(double - re, im) + 2 ( n_re, n_im)
          break;
       case MSG_COMPUTE_DATA:
-         *len = 2 + 5; // cid, dx, dy, iter
-         break;
-      case MSG_COMPUTE_BURST:
-         *len = 2 + 3 + 2 * sizeof(double) + 2; // 2 + cid (16bit) + 2x(double - re, im) + 2 ( n_re, n_im)
-         break;
-      case MSG_COMPUTE_DATA_BURST:
-         *len = 2 + 3 + sizeof(uint16_t); // cid, dx, dy, iter
+         *len = 2 + 6; // cid, dx, dy, iter
          break;
       default:
          ret = false;
@@ -60,6 +54,7 @@ bool fill_message_buf(const message *msg, uint8_t *buf, int size, int *len)
    // 1st - serialize the message into a buffer
    bool ret = true;
    *len = 0;
+
    switch(msg->type) {
       case MSG_OK:
       case MSG_ERROR:
@@ -86,12 +81,12 @@ bool fill_message_buf(const message *msg, uint8_t *buf, int size, int *len)
          memcpy(&(buf[1 + 1 * sizeof(double)]), &(msg->data.set_compute.c_im), sizeof(double));
          memcpy(&(buf[1 + 2 * sizeof(double)]), &(msg->data.set_compute.d_re), sizeof(double));
          memcpy(&(buf[1 + 3 * sizeof(double)]), &(msg->data.set_compute.d_im), sizeof(double));
-         buf[1 + 4 * sizeof(double)] = msg->data.set_compute.n;
-         *len = 1 + 4 * sizeof(double) + 1;
+         buf[1 + 4 * sizeof(double)] = msg->data.set_compute.n & 0xff;
+         buf[2 + 4 * sizeof(double)] = (msg->data.set_compute.n >> 8) & 0xff;
+         *len = 1 + 4 * sizeof(double) + 2;
          break;
       case MSG_COMPUTE:
-         // buf[1] = msg->data.compute.cid; // cid
-          buf[1] = msg->data.compute.cid & 0xff; // lower byte of cid
+         buf[1] = msg->data.compute.cid & 0xff; // lower byte of cid
          buf[2] = (msg->data.compute.cid >> 8) & 0xff; // higher byte of cid
          memcpy(&(buf[3 + 0 * sizeof(double)]), &(msg->data.compute.re), sizeof(double));
          memcpy(&(buf[3 + 1 * sizeof(double)]), &(msg->data.compute.im), sizeof(double));
@@ -100,36 +95,13 @@ bool fill_message_buf(const message *msg, uint8_t *buf, int size, int *len)
          *len = 2 + 2 + 2 * sizeof(double) + 2;
          break;
       case MSG_COMPUTE_DATA:
-         // buf[1] = msg->data.compute_data.cid;
          buf[1] = msg->data.compute_data.cid & 0xff; // lower byte of cid
          buf[2] = (msg->data.compute_data.cid >> 8) & 0xff; // higher byte of cid
          buf[3] = msg->data.compute_data.i_re;
          buf[4] = msg->data.compute_data.i_im;
-         buf[5] = msg->data.compute_data.iter;
-         *len = 6;
-         break;
-      case MSG_COMPUTE_BURST:
-         buf[1] = msg->data.compute_burst.cid & 0xff; // lower byte of cid
-         buf[2] = (msg->data.compute_burst.cid >> 8) & 0xff; // higher byte of cid
-         memcpy(&(buf[3 + 0 * sizeof(double)]), &(msg->data.compute_burst.re), sizeof(double));
-         memcpy(&(buf[3 + 1 * sizeof(double)]), &(msg->data.compute_burst.im), sizeof(double));
-         buf[3 + 2 * sizeof(double) + 0] = msg->data.compute_burst.n_re;
-         buf[3 + 2 * sizeof(double) + 1] = msg->data.compute_burst.n_im;
-         *len = 2 + 2 + 2 * sizeof(double) + 2;
-         break;
-      case MSG_COMPUTE_DATA_BURST:
-         buf[1] = msg->data.compute_data_burst.cid & 0xff; // lower byte of cid
-         buf[2] = (msg->data.compute_data_burst.cid >> 8) & 0xff; // higher byte of cid
-         buf[3] = msg->data.compute_data_burst.length & 0xff; // lower byte of length
-         buf[4] = (msg->data.compute_data_burst.length >> 8) & 0xff; // higher byte of length
-         if (msg->data.compute_data_burst.length > sizeof(buf) - 5) {
-            printf("something bad happened\n");
-            return false;
-         }
-         for (int i = 0; i < msg->data.compute_data_burst.length; ++i) {
-            buf[5 + i] = msg->data.compute_data_burst.iters[i];
-         }
-         *len = 5 + msg->data.compute_data_burst.length;
+         buf[5] = msg->data.compute_data.iter & 0xff;
+         buf[6] = (msg->data.compute_data.iter >> 8) & 0xff;
+         *len = 7;
          break;
       default: // unknown message type
          ret = false;
@@ -185,10 +157,9 @@ bool parse_message_buf(const uint8_t *buf, int size, message *msg)
             memcpy(&(msg->data.set_compute.c_im), &(buf[1 + 1 * sizeof(double)]), sizeof(double));
             memcpy(&(msg->data.set_compute.d_re), &(buf[1 + 2 * sizeof(double)]), sizeof(double));
             memcpy(&(msg->data.set_compute.d_im), &(buf[1 + 3 * sizeof(double)]), sizeof(double));
-            msg->data.set_compute.n = buf[1 + 4 * sizeof(double)];
+            msg->data.set_compute.n = buf[1 + 4 * sizeof(double)] | (buf[2 + 4 * sizeof(double)] << 8);
             break;
          case MSG_COMPUTE: // type + chunk_id + nbr_tasks
-            // msg->data.compute.cid = buf[1];
             msg->data.compute.cid = buf[1] | (buf[2] << 8); // combine lower and higher byte
             memcpy(&(msg->data.compute.re), &(buf[3 + 0 * sizeof(double)]), sizeof(double));
             memcpy(&(msg->data.compute.im), &(buf[3 + 1 * sizeof(double)]), sizeof(double));
@@ -196,24 +167,10 @@ bool parse_message_buf(const uint8_t *buf, int size, message *msg)
             msg->data.compute.n_im = buf[3 + 2 * sizeof(double) + 1];
             break;
          case MSG_COMPUTE_DATA:  // type + chunk_id + task_id + result
-            // msg->data.compute_data.cid = buf[1];
             msg->data.compute_data.cid = buf[1] | (buf[2] << 8); // combine lower and higher byte
             msg->data.compute_data.i_re = buf[3];
             msg->data.compute_data.i_im = buf[4];
-            msg->data.compute_data.iter = buf[5];
-            break;
-         case MSG_COMPUTE_BURST:
-            msg->data.compute_burst.cid = buf[1] | (buf[2] << 8); // combine lower and higher byte
-            memcpy(&(msg->data.compute_burst.re), &(buf[3 + 0 * sizeof(double)]), sizeof(double));
-            memcpy(&(msg->data.compute_burst.im), &(buf[3 + 1 * sizeof(double)]), sizeof(double));
-            msg->data.compute_burst.n_re = buf[3 + 2 * sizeof(double) + 0];
-            msg->data.compute_burst.n_im = buf[3 + 2 * sizeof(double) + 1];
-            break;
-         case MSG_COMPUTE_DATA_BURST:
-            msg->data.compute_data_burst.cid = buf[1] | (buf[2] << 8); // combine lower and higher byte
-            msg->data.compute_data_burst.length = buf[3] | (buf[4] << 8); // combine lower and higher byte
-            msg->data.compute_data_burst.iters = my_malloc(sizeof(uint8_t) * msg->data.compute_data_burst.length);
-            memcpy(msg->data.compute_data_burst.iters, &buf[5], msg->data.compute_data_burst.length);
+            msg->data.compute_data.iter = buf[5] | (buf[6] << 8);
             break;
          default: // unknown message type
             ret = false;

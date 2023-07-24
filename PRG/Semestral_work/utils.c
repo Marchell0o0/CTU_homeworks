@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-
 #include <termios.h>
 #include <unistd.h>
 
@@ -57,7 +56,6 @@ void error(const char *str)
 {
     fprintf(stderr, "ERROR: %s\n", str);
 }
-
 void warn(const char *str)
 {
     fprintf(stderr, "WARNING: %s\n", str);

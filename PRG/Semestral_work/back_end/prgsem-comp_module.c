@@ -4,13 +4,10 @@
 #include <pthread.h>
 #include <unistd.h>
 
-// files needed for both ends of the program
 #include "utils.h"
 #include "prg_io_nonblock.h"
 #include "event_queue.h"
 #include "messages.h"
-
-// rear end computations
 #include "compute_thread.h"
 
 #ifndef IO_READ_TIMEOUT_MS
@@ -81,7 +78,7 @@ void* pipe_rear_thread(void* d)
                 if (get_message_size(c, &len)){
                     msg_buf[i++] = c;
                 } else {
-                    fprintf(stderr, "ERROR: unknown message type\n"); 
+                    fprintf(stderr, "ERROR: Unknown message type %d\n", c); 
                 }
             } else { // read remaining bytes of the message
                 msg_buf[i++] = c;
@@ -100,15 +97,14 @@ void* pipe_rear_thread(void* d)
             }
         } 
         else if (r == 0) { } //timeout 
-
-        else { // error
+        else { 
             fprintf(stderr, "ERROR: reading from pipe\n");
             set_quit();
             event ev = { .type = EV_QUIT};
             queue_push(ev);
         }
         end = is_quit();
-    } // end while
+    } 
 
     return NULL;
 }

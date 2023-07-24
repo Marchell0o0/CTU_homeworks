@@ -45,7 +45,7 @@ typedef struct {
    double c_im;  // im (y) part of the c constant in recursive equation
    double d_re;  // increment in the x-coords
    double d_im;  // increment in the y-coords
-   uint8_t n;    // number of iterations per each pixel
+   uint16_t n;    // number of iterations per each pixel
 } msg_set_compute;
 
 typedef struct {
@@ -60,22 +60,8 @@ typedef struct {
    uint16_t cid;  // chunk id
    uint8_t i_re; // x-coords 
    uint8_t i_im; // y-coords
-   uint8_t iter; // number of iterations
+   uint16_t iter; // number of iterations
 } msg_compute_data;
-
-typedef struct {
-   uint16_t cid; // chunk id
-   double re;    // start of the x-coords (real)
-   double im;    // start of the y-coords (imaginary)
-   uint8_t n_re; // number of cells in x-coords
-   uint8_t n_im; // number of cells in y-coords
-} msg_compute_burst;
-
-typedef struct {
-   uint16_t cid;  // chunk id
-   uint16_t length;
-   uint8_t *iters; // number of iterations
-} msg_compute_data_burst;
 
 typedef struct {
    uint8_t type;   // message type
@@ -85,8 +71,6 @@ typedef struct {
       msg_set_compute set_compute;
       msg_compute compute;
       msg_compute_data compute_data;
-      msg_compute_burst compute_burst;
-      msg_compute_data_burst compute_data_burst;
    } data;
    uint8_t cksum; // message command
 } message;

@@ -1,20 +1,32 @@
-/*
- * Filename: xwin_sdl.c
- * Date:     2015/06/18 14:37
- * Author:   Jan Faigl
- */
-
 #include <assert.h>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include <SDL_image.h>
+#include <SDL2/SDL_image.h>
+
+#include <SDL2/SDL_ttf.h>
+
+#include <stdbool.h>
+
 
 #include "utils.h"
+#include "compute_control.h"
 
 #include "xwin_sdl.h"
 
-static SDL_Window *win = NULL;
+
+#define MENU_COLOR 100 // Gray color
+
+#define MAX_TEXTBOX_LENGTH 14
+
+#define NUMBER_OF_BUTTONS 10
+#define NUMBER_OF_TEXT_BOXES 8
+
+
+static SDL_Texture* createButton(const char* text, SDL_Color color, int padding);
+
+static void createButtons(void);
+static void createTextBoxes(void);
 
 static unsigned char icon_32x32_bits[] = {
    0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x20, 0x00, 0x00, 0x23, 0x00, 0x01, 0x29, 0x00, 0x01, 0x2e, 0x00, 0x02, 0x31, 0x00, 0x02, 0x34, 0x00, 0x02, 0x35, 0x00, 0x02, 0x33, 0x00, 0x02, 0x31, 0x00, 0x01, 0x2d, 0x00, 0x01, 0x29, 0x00, 0x00, 0x23, 0x00, 0x00, 0x20, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21,
@@ -51,47 +63,592 @@ static unsigned char icon_32x32_bits[] = {
    0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x1f, 0x00, 0x01, 0x24, 0x00, 0x01, 0x2a, 0x00, 0x01, 0x2f, 0x00, 0x02, 0x33, 0x00, 0x02, 0x35, 0x00, 0x02, 0x37, 0x00, 0x02, 0x36, 0x00, 0x02, 0x34, 0x00, 0x01, 0x30, 0x00, 0x01, 0x2b, 0x00, 0x01, 0x25, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21, 0x00, 0x00, 0x21
 };
 
-int xwin_init(int w, int h)
-{
-   int r;
-   r = SDL_Init(SDL_INIT_VIDEO);
-   my_assert(win == NULL, __func__, __LINE__, __FILE__);
-   win = SDL_CreateWindow("PRG Semester Project", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_SHOWN);
-   my_assert(win != NULL, __func__, __LINE__, __FILE__);
-   SDL_SetWindowTitle(win, "PRG SEM");
-   SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(icon_32x32_bits, 32, 32, 24, 32*3, 0xff, 0xff00, 0xff0000, 0x0000);
-   SDL_SetWindowIcon(win, surface);
-   SDL_FreeSurface(surface);
-   return r;
+typedef struct Button_Object {
+    SDL_Texture* texture;
+    SDL_Rect rect;
+} Button;
+
+typedef struct TextBox {
+    SDL_Rect rect;
+    SDL_Texture* texture;
+    SDL_bool focused;
+    SDL_Color bgColor;
+    SDL_Color borderColor;
+    char* text;
+} Text_Box;
+
+Button buttons[NUMBER_OF_BUTTONS];
+Text_Box text_boxes[NUMBER_OF_TEXT_BOXES];
+
+static SDL_Window *win = NULL;
+static SDL_Renderer *renderer = NULL;
+static TTF_Font* font;
+SDL_Point mouse_coords;
+
+SDL_mutex *mutex;
+
+static int windowWidth;
+static int windowHeight;
+static int menuWidth;
+static int terminalHeight;
+static int buttonWidth;
+static int buttonHeight;
+static int mainPadding;
+static int textBoxWidth;
+static int textBoxHeight;
+static int fontSize;
+
+static SDL_Texture* createButton(const char* text, SDL_Color color, int padding) {
+    // Render text surface
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
+
+
+    // Calculate the position to center the text within the button
+    int textX = (buttonWidth - textSurface->w) / 2;
+    int textY = (buttonHeight - textSurface->h) / 2;
+
+    // Create an empty surface for the button with transparency
+    SDL_Surface* buttonSurface = SDL_CreateRGBSurfaceWithFormat(0, buttonWidth, buttonHeight, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_SetSurfaceBlendMode(buttonSurface, SDL_BLENDMODE_BLEND);
+    SDL_FillRect(buttonSurface, NULL, SDL_MapRGBA(buttonSurface->format, 0, 0, 0, 0));
+
+    // Create a border for the button
+    SDL_Rect borderRect = {0, 0, buttonWidth, buttonHeight};
+    SDL_FillRect(buttonSurface, &borderRect, SDL_MapRGB(buttonSurface->format, color.r, color.g, color.b)); // White border color
+
+    // Create a filled rectangle inside the border for the button background
+    SDL_Rect buttonRect = {1, 1, buttonWidth - 2, buttonHeight - 2};
+    SDL_FillRect(buttonSurface, &buttonRect, SDL_MapRGB(buttonSurface->format, 0, 0, 0)); // Black button color
+
+    // Render the text onto the button surface
+    SDL_Rect textRect = { textX, textY, textSurface->w, textSurface->h };
+    SDL_BlitSurface(textSurface, NULL, buttonSurface, &textRect);
+
+    // Create texture from surface
+    SDL_Texture* buttonTexture = SDL_CreateTextureFromSurface(renderer, buttonSurface);
+
+    // Free the surfaces
+    SDL_FreeSurface(textSurface);
+    SDL_FreeSurface(buttonSurface);
+
+    return buttonTexture;
+}
+
+static SDL_Texture* createTextBox(const char* text, SDL_Color borderColor, SDL_Color bgColor, int padding) {
+    // Render text surface
+
+    SDL_Color white = {255, 255, 255};
+
+    SDL_Surface* textSurface = NULL;
+    if (text != NULL) {
+        textSurface = TTF_RenderText_Solid(font, text, white);
+    }
+
+    // Create an empty surface for the text box with transparency
+    SDL_Surface* textBoxSurface = SDL_CreateRGBSurfaceWithFormat(0, textBoxWidth, textBoxHeight, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_SetSurfaceBlendMode(textBoxSurface, SDL_BLENDMODE_BLEND);
+    SDL_FillRect(textBoxSurface, NULL, SDL_MapRGBA(textBoxSurface->format, 0, 0, 0, 0));
+
+    // Create a border for the text box
+    SDL_Rect borderRect = {0, 0, textBoxWidth, textBoxHeight};
+    SDL_FillRect(textBoxSurface, &borderRect, SDL_MapRGB(textBoxSurface->format, borderColor.r, borderColor.g, borderColor.b));
+
+    // Create a filled rectangle inside the border for the text box background
+    SDL_Rect textBoxRect = {1, 1, textBoxWidth - 2, textBoxHeight - 2};
+    SDL_FillRect(textBoxSurface, &textBoxRect, SDL_MapRGB(textBoxSurface->format, bgColor.r, bgColor.g, bgColor.b));
+
+    // Render the text onto the text box surface if there is text
+    if (textSurface != NULL) {
+        int textX = (textBoxWidth - textSurface->w - (textBoxWidth * 0.07));
+        int textY = (textBoxHeight - textSurface->h) / 2;
+        SDL_Rect textRect = { textX, textY, textSurface->w, textSurface->h };
+        SDL_BlitSurface(textSurface, NULL, textBoxSurface, &textRect);
+    }
+
+    // Create texture from surface
+    SDL_Texture* textBoxTexture = SDL_CreateTextureFromSurface(renderer, textBoxSurface);
+
+    // Free the surfaces
+    SDL_FreeSurface(textSurface);
+    SDL_FreeSurface(textBoxSurface);
+
+    return textBoxTexture;
 }
 
 void xwin_close()
 {
    my_assert(win != NULL, __func__, __LINE__, __FILE__);
+   for (int i = 0; i < NUMBER_OF_BUTTONS; ++i){
+        SDL_DestroyTexture(buttons[i].texture);
+   }
+   SDL_DestroyMutex(mutex);
+   TTF_CloseFont(font);
+   SDL_DestroyRenderer(renderer);
    SDL_DestroyWindow(win);
    SDL_Quit();
 }
 
-void xwin_redraw(int w, int h, unsigned char *img)
+
+int xwin_init(int w, int h)
 {
-   my_assert((img && win), __func__, __LINE__, __FILE__);
-   SDL_Surface *scr = SDL_GetWindowSurface(win);
-   for(int y = 0; y < scr->h; ++y) {
-      for(int x = 0; x < scr->w; ++x) {
-         const int idx = (y * scr->w + x) * scr->format->BytesPerPixel;
-         Uint8 *px = (Uint8*)scr->pixels + idx;
-         *(px + scr->format->Rshift / 8) = *(img++);
-         *(px + scr->format->Gshift / 8) = *(img++);
-         *(px + scr->format->Bshift / 8) = *(img++);
-      }
-   }
-   SDL_UpdateWindowSurface(win);
+    int r;
+
+    mutex = SDL_CreateMutex();
+
+    r = SDL_Init(SDL_INIT_VIDEO);
+    my_assert(win == NULL, __func__, __LINE__, __FILE__);
+
+    SDL_DisplayMode DM;
+    my_assert(SDL_GetCurrentDisplayMode(0, &DM) == 0, __func__, __LINE__, __FILE__);
+   
+    // Calculate the window dimensions to be 70% of the screen width, with the height
+    // determined by a 16:9 aspect ratio
+    windowWidth = (int)(DM.w * 0.7);
+    windowHeight = (int)(windowWidth * 9 / 16);
+
+    win = SDL_CreateWindow("PRG Semester Project", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
+    my_assert(win != NULL, __func__, __LINE__, __FILE__);
+    SDL_SetWindowTitle(win, "PRG SEM");
+    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(icon_32x32_bits, 32, 32, 24, 32*3, 0xff, 0xff00, 0xff0000, 0x0000);
+    SDL_SetWindowIcon(win, surface);
+    SDL_FreeSurface(surface);
+
+    // Create a renderer to draw on the window
+    renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+    my_assert(renderer != NULL, __func__, __LINE__, __FILE__);
+
+    // Initialize SDL_ttf
+    my_assert(TTF_Init() == 0, __func__, __LINE__, __FILE__);
+
+
+    menuWidth = (int)(windowWidth * 0.15);
+    terminalHeight = (int)(windowHeight - (9.0 / 16.0) * (windowWidth - menuWidth));
+    mainPadding = (int)(menuWidth * 0.04);
+    buttonWidth = (int)(menuWidth - (2 * mainPadding));
+    buttonHeight = (int)(menuWidth * 0.15);
+    textBoxWidth = (int)(menuWidth * 0.28);
+    textBoxHeight = (int)(menuWidth * 0.08);
+    fontSize = (int)(menuWidth * 0.06);
+
+    // Load a font
+    font = TTF_OpenFont("OpenSans-Regular.ttf", fontSize);
+    my_assert(font != NULL, __func__, __LINE__, __FILE__);
+
+
+    // Draw the menu on the left part of the screen
+    SDL_Rect menuRect = {0, 0, menuWidth, windowHeight};
+    SDL_SetRenderDrawColor(renderer, MENU_COLOR, MENU_COLOR, MENU_COLOR, 255);
+    SDL_RenderFillRect(renderer, &menuRect);
+
+    // Specify the position and size of the block
+    SDL_Rect terminalRect = {menuWidth, windowHeight - terminalHeight, windowWidth - menuWidth, terminalHeight};
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey color
+    SDL_RenderFillRect(renderer, &terminalRect);
+
+    createButtons();
+
+    createTextBoxes();
+
+    SDL_RenderPresent(renderer); 
+
+    return r;
 }
 
-void xwin_poll_events(void) 
-{
-   SDL_Event event;
-   while (SDL_PollEvent(&event));
+void terminal_redraw(char* buffer, int buffer_size){
+    // Lock the mutex to prevent other threads from rendering at the same time
+    SDL_LockMutex(mutex);
+
+    // Specify the position and size of the block
+    SDL_Rect terminalRect = {menuWidth, windowHeight - terminalHeight, windowWidth - menuWidth, terminalHeight};
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255); // Grey color
+    SDL_RenderFillRect(renderer, &terminalRect);
+
+    TTF_CloseFont(font);
+    font = TTF_OpenFont("OpenSans-Regular.ttf", fontSize*1.5);
+    my_assert(font != NULL, __func__, __LINE__, __FILE__);
+
+
+    // Split buffer into lines
+    char *line = strtok(buffer, "\n");
+    int lineNumber = 0;
+    while (line != NULL) {
+        // Create surface from text
+        SDL_Surface* textSurface = TTF_RenderText_Blended(font, line, (SDL_Color){0, 0, 0, 255}); // Black color for text
+
+        // Create texture from surface
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+        SDL_Rect textRect;
+        textRect.x = terminalRect.x + mainPadding;
+        textRect.y = terminalRect.y + lineNumber * TTF_FontHeight(font) + mainPadding;
+        textRect.w = textSurface->w;
+        textRect.h = textSurface->h;
+
+        // Render the text
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+        // Free the text surface and texture
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+
+        // Get the next line
+        line = strtok(NULL, "\n");
+        lineNumber++;
+    }
+
+    // Present the new frame
+    SDL_RenderPresent(renderer);
+
+    font = TTF_OpenFont("OpenSans-Regular.ttf", fontSize);
+    my_assert(font != NULL, __func__, __LINE__, __FILE__);
+
+    // Unlock the mutex to allow other threads to render
+    SDL_UnlockMutex(mutex);
 }
 
-/* end of xwin_sdl.c */
+static const char* text_boxes_labels[NUMBER_OF_TEXT_BOXES] = {
+    "C constant: real",
+    "C constant: imaginary",
+    "Number of iterations:",
+    "Ranges: Real: from",
+    "Ranges: Real: to",
+    "Ranges: Imag: from",
+    "Ranges: Imag: to",
+    "Zoom factor:"
+};
+
+double parameters[NUMBER_OF_TEXT_BOXES];
+
+void pass_settings(void) {
+    for (int i = 0; i < NUMBER_OF_TEXT_BOXES; ++i) {
+        double value = atof(text_boxes[i].text); // Convert the text to a double
+        parameters[i] = value; // Store the double value in the parameters array
+    }
+    set_parameters(parameters);
+}
+
+static void createTextBoxes() {
+    SDL_Color white = {255, 255, 255};
+    SDL_Color black = {0, 0, 0};
+
+    get_parameters(parameters);
+
+    for (int i = 0; i < NUMBER_OF_TEXT_BOXES; i++) {
+        // Render the label
+        SDL_Surface* labelSurface = TTF_RenderText_Solid(font, text_boxes_labels[i], white);
+        SDL_Texture* labelTexture = SDL_CreateTextureFromSurface(renderer, labelSurface);
+
+        // Get the width and height of the label surface
+        int labelWidth = labelSurface->w;
+        int labelHeight = labelSurface->h;
+
+        // Calculate position for the text box
+        int textBoxX = menuWidth - textBoxWidth - mainPadding;
+        int textBoxY = 10 + (NUMBER_OF_BUTTONS - 1) * (buttonHeight + mainPadding) + i * (textBoxHeight + mainPadding);
+
+        // Set the width and height of the label rect based on the label dimensions
+        SDL_Rect labelRect = {mainPadding, textBoxY + (textBoxHeight - labelHeight) / 2, labelWidth, labelHeight};
+        SDL_RenderCopy(renderer, labelTexture, NULL, &labelRect);
+
+        text_boxes[i].text = calloc(MAX_TEXTBOX_LENGTH, sizeof(char));
+
+        char valueString[MAX_TEXTBOX_LENGTH];
+        if (parameters[i] == (int)parameters[i]) { // Check if the number is a whole number
+            sprintf(valueString, "%d", (int)parameters[i]); // Format as an integer
+        } else {
+            // Format as a float with up to 3 decimal places but without trailing zeroes
+            sprintf(valueString, "%g", parameters[i]);
+        }
+        strcpy(text_boxes[i].text, valueString);
+
+
+        // Create texture for the text box
+        text_boxes[i].texture = createTextBox(valueString, white, black, mainPadding);
+
+        // Set the position and size of the text box rect
+        text_boxes[i].rect.x = textBoxX;
+        text_boxes[i].rect.y = textBoxY;
+        text_boxes[i].rect.w = textBoxWidth;
+        text_boxes[i].rect.h = textBoxHeight;
+
+        text_boxes[i].bgColor = black;
+        text_boxes[i].borderColor = white;
+
+
+        text_boxes[i].focused = false;
+
+        // Cleanup
+        SDL_FreeSurface(labelSurface);
+        SDL_DestroyTexture(labelTexture);
+
+        SDL_RenderCopy(renderer, text_boxes[i].texture, NULL, &text_boxes[i].rect);
+    }
+}
+
+static const char* button_labels[NUMBER_OF_BUTTONS] = {
+    "Request version",
+    "Set computing parameters",
+    "Compute with module",
+    "Draw an animation",
+    "Pause the computation",
+    "Reset the computation",
+    "Reset the image",
+    "Save the image",
+    "Quit the program",
+    "Save settings"
+};
+
+static void createButtons(void){
+
+    SDL_Color white = {255, 255, 255};
+
+    for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
+        // Create button texture
+        buttons[i].texture = createButton(button_labels[i], white, mainPadding);
+
+        // Get button size
+        int textWidth, textHeight;
+        TTF_SizeText(font, button_labels[i], &textWidth, &textHeight);
+        buttons[i].rect.w = buttonWidth;
+        buttons[i].rect.h = buttonHeight;
+
+        // Set button position
+        buttons[i].rect.x = mainPadding;
+        if (i == NUMBER_OF_BUTTONS -1){
+            buttons[i].rect.y = mainPadding + (NUMBER_OF_TEXT_BOXES * (textBoxHeight + mainPadding)) + (buttonHeight + mainPadding) * i;
+        } else {
+            buttons[i].rect.y = mainPadding + (buttonHeight + mainPadding) * i;
+        }
+        SDL_RenderCopy(renderer, buttons[i].texture, NULL, &buttons[i].rect);
+    }    
+}
+
+
+int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+void fractal_draw(int w, int h, unsigned char *img) {
+    my_assert((img && win), __func__, __LINE__, __FILE__);
+    
+    SDL_LockMutex(mutex);
+
+    // Get current window size
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(win, &windowWidth, &windowHeight);
+
+    // Calculate the black area size
+    int blackAreaWidth = windowWidth - menuWidth;
+    int blackAreaHeight = windowHeight - terminalHeight;
+
+    // Set the size of the fractal image to be the minimum between the actual image size and the black area size
+    int fractalWidth = min(w, blackAreaWidth);
+    int fractalHeight = min(h, blackAreaHeight);
+
+    // Create a surface from the image data
+    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(img, w, h, 24, w * 3, 0xff, 0xff00, 0xff0000, 0x0000);
+
+    // Create a texture from the surface
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    // We're done with the surface, free it
+    SDL_FreeSurface(surface);
+
+    // Calculate the position of the fractal image
+    int fractal_x = menuWidth + (blackAreaWidth - fractalWidth) / 2;
+    int fractal_y = (blackAreaHeight - fractalHeight) / 2;
+
+    // Define the target area to draw the fractal
+    SDL_Rect targetRect = {fractal_x, fractal_y, fractalWidth, fractalHeight};
+
+    // Render the texture to the screen
+    SDL_RenderCopy(renderer, texture, NULL, &targetRect);
+
+    // We're done with the texture, free it
+    SDL_DestroyTexture(texture);
+
+    SDL_RenderPresent(renderer);
+
+    SDL_UnlockMutex(mutex);
+}
+
+enum {
+    DEFAULT,
+    HOVER,
+    PRESSED, 
+    FOCUSED,
+    TEXT_CHANGED
+};
+
+static int hovered = NONE;
+static int pressed = NONE;
+static int focused = NONE;
+
+bool is_focused(void){ return (focused == -1) ? false : true;}
+
+
+static void redraw_element(int element, int state) {
+    SDL_Color borderColor;
+
+    SDL_Color black = {0, 0, 0};
+    SDL_Color white = {255, 255, 255};
+    SDL_Color dark_grey = {100, 100, 100};
+    SDL_Color red = {200, 0, 0};
+    SDL_Color light_grey = {150, 150, 150};
+
+
+    switch (state) {
+        case HOVER:
+            borderColor = light_grey; // Change color for hovered state
+            if (element >= NUMBER_OF_BUTTONS){
+                text_boxes[element - NUMBER_OF_BUTTONS].borderColor = light_grey; // Set borderColor to focusedColor
+            }
+            break;
+        case DEFAULT:
+            borderColor = white; // Reset to white color
+            if (element >= NUMBER_OF_BUTTONS){
+                text_boxes[element - NUMBER_OF_BUTTONS].borderColor = white; // Set borderColor to focusedColor
+                text_boxes[element - NUMBER_OF_BUTTONS].bgColor = black; // Set bgColor to focusedColor
+            }
+            break;
+        case PRESSED:
+            borderColor = dark_grey; // Change color for pressed state
+            if (element >= NUMBER_OF_BUTTONS){
+                text_boxes[element - NUMBER_OF_BUTTONS].borderColor = dark_grey; // Set borderColor to focusedColor
+            }
+            break;
+        case FOCUSED:
+            borderColor = red; // Change color for focused state
+            if (element >= NUMBER_OF_BUTTONS){
+                text_boxes[element - NUMBER_OF_BUTTONS].borderColor = red; // Set borderColor to focusedColor
+                text_boxes[element - NUMBER_OF_BUTTONS].bgColor = light_grey; // Set bgColor to focusedColor
+            }
+            break;
+        default:
+            break;
+    }
+
+    SDL_LockMutex(mutex);
+
+    if (element < NUMBER_OF_BUTTONS) {
+        // Update buttons
+        SDL_DestroyTexture(buttons[element].texture);
+        buttons[element].texture = createButton(button_labels[element], borderColor, mainPadding);
+        SDL_RenderCopy(renderer, buttons[element].texture, NULL, &buttons[element].rect);
+    }
+    // Update text boxes
+    else if (element < NUMBER_OF_BUTTONS + NUMBER_OF_TEXT_BOXES) {
+        int textbox_index = element - NUMBER_OF_BUTTONS;
+        SDL_DestroyTexture(text_boxes[textbox_index].texture);
+
+        // Create the text box with the specified colors
+        text_boxes[textbox_index].texture = createTextBox(text_boxes[textbox_index].text, text_boxes[textbox_index].borderColor, text_boxes[textbox_index].bgColor, mainPadding);
+
+        // Draw the text box
+        SDL_RenderCopy(renderer, text_boxes[textbox_index].texture, NULL, &text_boxes[textbox_index].rect);
+    }
+
+    // Update the screen
+    SDL_RenderPresent(renderer);
+
+    SDL_UnlockMutex(mutex);
+}
+
+int menu_react(SDL_Event sdl_event) {
+
+    int action = NONE;
+
+    int hovered_element;
+
+    switch(sdl_event.type){
+        case SDL_MOUSEMOTION:
+
+            mouse_coords.x = sdl_event.motion.x;
+            mouse_coords.y = sdl_event.motion.y;
+
+            hovered_element = is_hovering(mouse_coords);
+            if (hovered_element != NONE && hovered_element == focused){
+                hovered = NONE;
+                break;
+            }
+            else if(hovered == NONE && hovered_element != NONE){
+                redraw_element(hovered_element, HOVER);
+                hovered = hovered_element;
+            } 
+            else if (hovered_element == NONE && hovered != NONE && pressed == NONE){
+                redraw_element(hovered, DEFAULT);
+                hovered = NONE;
+            }
+            break;
+        case SDL_MOUSEBUTTONUP:
+            mouse_coords.x = sdl_event.button.x;
+            mouse_coords.y = sdl_event.button.y;
+            
+            hovered_element = is_hovering(mouse_coords);
+
+            if(hovered_element == NONE && pressed != NONE){
+                redraw_element(pressed, DEFAULT);
+            }
+            else if (hovered_element != NONE && hovered_element < NUMBER_OF_BUTTONS){ 
+                action = hovered_element;
+                redraw_element(pressed, HOVER);
+            }
+            else if (hovered_element >= NUMBER_OF_BUTTONS && focused == NONE){
+                    text_boxes[hovered_element - NUMBER_OF_BUTTONS].focused = true;
+                    focused = hovered_element;
+                    redraw_element(hovered_element, FOCUSED);
+                } 
+            pressed = NONE;
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            mouse_coords.x = sdl_event.button.x;
+            mouse_coords.y = sdl_event.button.y;
+            
+            hovered_element = is_hovering(mouse_coords);
+
+            if (hovered_element != NONE && hovered_element != focused){
+                
+                pressed = hovered_element;
+                redraw_element(hovered_element, PRESSED);
+            }
+            if (focused != NONE && hovered_element != focused){
+                    redraw_element(focused, DEFAULT);
+                    focused = NONE;
+                    text_boxes[focused - NUMBER_OF_BUTTONS].focused = false;
+                }
+            break;
+        case SDL_TEXTINPUT:
+            if (focused != NONE) {
+                strcat(text_boxes[focused - NUMBER_OF_BUTTONS].text, sdl_event.text.text);
+                redraw_element(focused, TEXT_CHANGED);
+            }
+            break;
+        case SDL_KEYDOWN:
+            if (sdl_event.key.keysym.sym == SDLK_BACKSPACE && focused != NONE && strlen(text_boxes[focused - NUMBER_OF_BUTTONS].text) > 0) {
+                size_t textLength = strlen(text_boxes[focused - NUMBER_OF_BUTTONS].text);
+                text_boxes[focused - NUMBER_OF_BUTTONS].text[textLength - 1] = '\0';
+                redraw_element(focused, TEXT_CHANGED);
+            }
+            break;
+    break;
+    }
+    return action;
+}
+
+int is_hovering(SDL_Point mouse) {
+    // Check if the mouse is hovering over any button
+    for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
+        if (SDL_PointInRect(&mouse, &buttons[i].rect)) {
+            return (GUI_Element)i; // Mouse cursor is hovering over a button
+        }
+    }
+
+    // Check if the mouse is hovering over any text box
+    for (int i = 0; i < NUMBER_OF_TEXT_BOXES; i++) {
+        if (SDL_PointInRect(&mouse, &text_boxes[i].rect)) {
+            return (GUI_Element)(i + NUMBER_OF_BUTTONS); // Mouse cursor is hovering over a text box
+        }
+    }
+
+    return NONE; // Mouse cursor is not hovering over anything
+}

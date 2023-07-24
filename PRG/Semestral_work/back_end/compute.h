@@ -5,14 +5,13 @@
 
 #include "messages.h"
 
+/* Set settings for the computation */
 void set_compute(const message *msg);
 void set_chunk(const message *msg);
-void chunk_reset(void);
-uint8_t compute(int r, int c);
 
+/* Prepare a message with data for one pixel*/
 bool compute_chunk(message *compute_data);
 
-void compute_chunk_burst(message *msg);
-
+// void compute_chunk_burst(message *msg);
 
 #endif

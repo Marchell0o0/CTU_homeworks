@@ -3,13 +3,15 @@
 **/.vscode/
 
 PRG/**/lectures/
-PRG/**/testing_files/
+**/testing_files/
 PRG/*/generate_solutions.sh
+PRG/Semestral_work/frames
 
 KUI/**/kuimaze/
 KUI/**/maps/
 KUI/**/maps_difficult/
 KUI/**/lab/
+KUI/05_Pattern_Recognition/training_data
 
 ALP/Lessons/
 ALP/Tests/
