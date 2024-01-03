@@ -1,50 +1,37 @@
-nums = list(map(int, input().split()))
-maxlands = dict()
-
-length = 0
-sum = 0
-
 def isPrime(n):
-    if n==1 or n==0:
+    if n <= 1:
         return False
     else:
-        for i in range(2,int(n/2)+1):
-            if (n%i) == 0:
+        for i in range(2, n // 2 + 1):
+            if n % i == 0:
                 return False
-        return True 
+        return True
 
 
-
-for i in range(len(nums)-1):
-    if nums[i] > nums[i+1] and isPrime(abs(nums[i]))==False and isPrime(abs(nums[i+1]))==False:
+def main():
+    nums = list(map(int, input().split()))
+    length = 0
+    sum = 0
+    max_length = 0
+    max_sum = 0
+    for i in range(len(nums) - 1):
+        if isPrime(nums[i]):
+            continue
+        sum += nums[i]
         length += 1
-        if length == 1:
-            length += 1
-            sum = nums[i] + nums[i+1]
-        if length > 2:
-            sum += nums[i+1]
-    else:
-        if length not in maxlands:
-            maxlands[length] = list()
-        maxlands[length].append(sum)
-        sum = 0
-        length = 0
+        if length > max_length:
+            max_length = length
+            max_sum = sum
+        elif length == max_length and max_sum < sum:
+            max_sum = sum
+
+        if nums[i+1] > nums[i]:
+            sum = 0
+            length = 0
+
+    print(max_length)
+    print(max_sum)
 
 
-if length not in maxlands:
-    maxlands[length] = list()
-maxlands[length].append(sum)
-
-for i in range(len(nums)):
-    if isPrime(nums[i]) == True:
-        continue
-    else:
-        if 1 not in maxlands:
-            maxlands[1] = list()
-        maxlands[1].append(nums[i])
-
-maxlength = max(maxlands.keys())
-
-print(maxlength)
-print(max(maxlands[maxlength]))
-
+if __name__ == "__main__":
+    main()

@@ -1,10 +1,9 @@
-#include <stdlib.h>
-#include <stdbool.h>
-
 #include "linked_list.h"
 
-typedef struct Node
-{
+#include <stdbool.h>
+#include <stdlib.h>
+
+typedef struct Node {
     int data;
     struct Node *next;
 } Node;
@@ -13,23 +12,19 @@ Node *head = NULL;
 Node *tail = NULL;
 int size_of_queue = 0;
 
-_Bool push(int entry)
-{
+bool push(int entry) {
     Node *newNode = (Node *)malloc(sizeof(Node));
-    if (newNode == NULL)
-        return false;
+    if (newNode == NULL) return false;
 
     newNode->data = entry;
     newNode->next = NULL;
 
-    if (size_of_queue == 0)
-    { // make the new node the head of the queue
+    if (size_of_queue == 0) {  // make the new node the head of the queue
         head = newNode;
         tail = newNode;
     }
 
-    else
-    { // add after the tail node
+    else {  // add after the tail node
         tail->next = newNode;
         tail = newNode;
     }
@@ -39,10 +34,8 @@ _Bool push(int entry)
     return true;
 }
 
-int pop(void)
-{
-    if (size_of_queue == 0)
-        return -1;
+int pop(void) {
+    if (size_of_queue == 0) return -1;
 
     // return the head and remove from queue
     Node *temp = head;
@@ -54,11 +47,9 @@ int pop(void)
     return data;
 }
 
-_Bool insert(int entry)
-{
+_Bool insert(int entry) {
     Node *newNode = (Node *)malloc(sizeof(Node));
-    if (newNode == NULL)
-        return false;
+    if (newNode == NULL) return false;
 
     newNode->data = entry;
     newNode->next = NULL;
@@ -66,33 +57,28 @@ _Bool insert(int entry)
     Node *current = head;
     Node *prev = NULL;
 
-    // while the queue hasnt ended and the entry is bigger than the current element
-    // move through the queue
+    // while the queue hasnt ended and the entry is bigger than the current
+    // element move through the queue
     int idx = 0;
-    while (current != NULL && (entry < current->data))
-    {
+    while (current != NULL && (entry < current->data)) {
         prev = current;
         current = current->next;
         idx++;
     }
 
-    if (prev == NULL)
-    { // at the head
+    if (prev == NULL) {  // at the head
         newNode->next = head;
         head = newNode;
-        if (current == NULL)
-        { // empty queue
+        if (current == NULL) {  // empty queue
             tail = newNode;
         }
     }
 
-    else
-    { // in the middle
+    else {  // in the middle
         newNode->next = current;
         prev->next = newNode;
 
-        if (current == NULL)
-        { // at the end
+        if (current == NULL) {  // at the end
             tail = newNode;
         }
     }
@@ -101,30 +87,22 @@ _Bool insert(int entry)
     return true;
 }
 
-_Bool erase(int entry)
-{
+_Bool erase(int entry) {
     Node *current = head;
     Node *prev = NULL;
     _Bool removed = false;
 
     // going through the whole queue
-    while (current != NULL)
-    {
-
-        if (entry == current->data)
-        { // if entry and an element are the same
+    while (current != NULL) {
+        if (entry == current->data) {  // if entry and an element are the same
             Node *toRemove = current;
-            if (prev == NULL)
-            { // moving the head node
+            if (prev == NULL) {  // moving the head node
                 head = current->next;
-            }
-            else
-            {
+            } else {
                 prev->next = current->next;
             }
 
-            if (tail == current)
-            { // moving the tail node
+            if (tail == current) {  // moving the tail node
                 tail = prev;
             }
 
@@ -133,9 +111,7 @@ _Bool erase(int entry)
 
             size_of_queue--;
             removed = true;
-        }
-        else
-        {
+        } else {
             prev = current;
             current = current->next;
         }
@@ -144,32 +120,24 @@ _Bool erase(int entry)
     return removed;
 }
 
-int getEntry(int idx)
-{
-    if (idx < 0 || idx >= size_of_queue)
-        return EXIT_FAILURE;
+int getEntry(int idx) {
+    if (idx < 0 || idx >= size_of_queue) return EXIT_FAILURE;
 
     Node *current = head;
 
     int i;
-    for (i = 0; i < idx; i++)
-        current = current->next;
+    for (i = 0; i < idx; i++) current = current->next;
 
     return current->data;
 }
 
-int size(void)
-{
-    return size_of_queue;
-}
+int size(void) { return size_of_queue; }
 
-void clear()
-{
+void clear() {
     Node *current = head;
     Node *next;
 
-    while (current != NULL)
-    {
+    while (current != NULL) {
         next = current->next;
 
         free(current);
