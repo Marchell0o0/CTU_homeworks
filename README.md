@@ -1,4 +1,4 @@
-# CTU FEL KyR Homeworks
+# CTU FEE CyR(Cybernetics and robotics) Homeworks
 
 # Disclaimer 
 If you don't want to get kicked out of the university, only use testing files(if present) and get inspiration from a working program. Don't copy any parts of the program into your code, or at least ask ChatGPT to rephrase it :).
