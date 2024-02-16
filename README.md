@@ -19,3 +19,7 @@ Engineering focused C language. Work related to memory allocation and multi-thre
 ## KUI (Cybernetics and Artificial Intelligence)
 
 AI and decision-making algorithms course in Python. Projects exploring artificial intelligence techniques, including A* algorithm for maze-solving, Reversi player using minimax with alpha-beta pruning, Markov Decision Process, and reinforcement learning for policy in a maze.
+
+## MIK (Microcontrollers)
+
+Introductory course into microcontrollers. Practical exercises on working with LED and simplest registers, service of time interrupt flags, work with alphanumeric LCD, AD converter, I2C protocol and generation of a PWM signal.
