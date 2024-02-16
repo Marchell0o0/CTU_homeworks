@@ -14,8 +14,8 @@ Introductory Computer Science course in Python. Projects in related to algorithm
 
 ## PRG (Programming in C)
 
-Engineering focused C language. Work related to memory allocation and multi-threated programming. Projects focused on programming concepts, such as ASCII art, prime factorization, Caesar cipher, grep implementation, matrix operations, and data structure implementation. The semestral work is a multi-threaded fractal drawing program.
+Engineering focused C language. Work related to memory allocation and multi-threated programming. Projects focused on programming concepts, such as prime factorization, Caesar cipher, grep implementation, matrix operations, and data structure implementation. The semestral work is a multi-threaded fractal drawing program.
 
-## KUI (Cybernetics and Robotics)
+## KUI (Cybernetics and Artificial Intelligence)
 
 AI and decision-making algorithms course in Python. Projects exploring artificial intelligence techniques, including A* algorithm for maze-solving, Reversi player using minimax with alpha-beta pruning, Markov Decision Process, and reinforcement learning for policy in a maze.
