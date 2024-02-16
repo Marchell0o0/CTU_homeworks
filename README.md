@@ -1,4 +1,4 @@
-# CTU FEE CyR(Cybernetics and robotics) Homeworks
+# CTU FEE CyR(Cybernetics and Robotics) Homeworks
 
 # Disclaimer 
 If you don't want to get kicked out of the university, only use testing files(if present) and get inspiration from a working program. Don't copy any parts of the program into your code, or at least ask ChatGPT to rephrase it :).
@@ -14,7 +14,7 @@ Introductory Computer Science course in Python. Projects in related to algorithm
 
 ## PRG (Programming in C)
 
-Engineering focused C language. Work related to memory allocation and multi-threated programming. Projects focused on programming concepts, such as prime factorization, Caesar cipher, grep implementation, matrix operations, and data structure implementation. The semestral work is a multi-threaded fractal drawing program.
+Engineering focused C language. Work related to memory allocation and multi-threated programming. Projects focused on programming concepts, such as prime factorization, Caesar cipher, grep implementation, matrix operations, and data structure implementation. The semestral work is a multi-threaded fractal drawing program (Which is featured in a different repository).
 
 ## KUI (Cybernetics and Artificial Intelligence)
 
